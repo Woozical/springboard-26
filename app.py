@@ -113,7 +113,13 @@ def login():
 def logout():
     """Handle logout of user."""
 
-    # IMPLEMENT THIS
+    if g.user:
+        flash('Successfully logged out.', 'info')
+        do_logout()
+    else:
+        flash('You are already logged out.', 'info')
+    
+    return redirect('/')
 
 
 ##############################################################################
