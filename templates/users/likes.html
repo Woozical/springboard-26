@@ -1,11 +1,9 @@
 {% extends 'base.html' %}
-
 {% block content %}
-
-  <div class="bg"></div>
   <div class="row justify-content-center">
     <div class="col-md-6">
       <ul class="list-group no-hover" id="messages">
+        {% for message in g.user.likes %}
         <li class="list-group-item">
           <a href="{{ url_for('users_show', user_id=message.user.id) }}">
             <img src="{{ message.user.image_url }}" alt="" class="timeline-image">
@@ -30,7 +28,7 @@
                   </form>
                 {% endif %}
                 <form method="POST" action="/users/add_like/{{ message.id }}">
-                  <input type="hidden" name="redirect" value="/messages/{{message.id}}">
+                  <input type="hidden" name="redirect" value="/users/likes">
                   <button class="
                     btn 
                     btn-sm 
@@ -45,8 +43,9 @@
             <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
           </div>
         </li>
+        <br>
+        {%endfor%}
       </ul>
     </div>
   </div>
-
 {% endblock %}

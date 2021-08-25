@@ -275,7 +275,32 @@ def delete_user():
 
     return redirect("/signup")
 
+@app.route('/users/add_like/<int:msg_id>', methods=['POST'])
+def like_post(msg_id):
+    """Adds/Removes a message to user's liked posts."""
 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+    message = Message.query.get_or_404(msg_id)
+    if message.user_id != g.user.id:
+        g.user.likes.append(message) if message not in g.user.likes else g.user.likes.remove(message)
+        db.session.commit()
+    else:
+        flash("Sorry, but everyone likes their own posts!", 'warning')
+    
+    return redirect(request.form['redirect'])
+
+@app.route('/users/likes')
+def show_liked_posts():
+    """Displays all of the posts liked by current user."""
+
+    if not g.user:
+        flash("You must be logged in", "warning")
+        return redirect('/')
+    
+    return render_template('/users/likes.html')
 ##############################################################################
 # Messages routes:
 
