@@ -8,12 +8,32 @@
       <form method="POST" id="user_form">
         {{ form.hidden_tag() }}
 
-        {% for field in form if field.widget.input_type != 'hidden' and field.name != 'password' %}
+        {% for field in form if field.widget.input_type != 'hidden' and field.name != 'password' and field.name != 'image_url' and field.name != 'header_image_url' %}
           {% for error in field.errors %}
             <span class="text-danger">{{ error }}</span>
-          {% endfor %}
+          {% endfor %}  
           {{ field(placeholder=field.label.text, class="form-control") }}
         {% endfor %}
+
+        {% for error in form.image_url.errors %}
+          <span class="text-danger">{{ error }}</span>
+        {% endfor %}
+
+        {% if form.image_url.data == '/static/images/default-pic.png' %}
+          {{ form.image_url(value='', placeholder=form.image_url.label.text, class="form-control") }}
+        {% else %}
+          {{ form.image_url(placeholder=form.image_url.label.text, class="form-control") }}
+        {% endif %}
+
+        {% for error in form.header_image_url.errors %}
+          <span class="text-danger">{{ error }} </span>
+        {% endfor %}
+
+        {% if form.header_image_url.data == '/static/images/warbler-hero.jpg' %}
+          {{ form.header_image_url(value='', placeholder=form.header_image_url.label.text, class="form-control") }}
+        {% else %}
+          {{ form.header_image_url(placeholder=form.header_image_url.label.text, class="form-control") }}
+        {% endif %}
 
         <p>To confirm changes, enter your password:</p>
         {% if form.password.errors %}

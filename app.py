@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user"
@@ -217,8 +217,48 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
+    if not g.user:
+        flash("Access unauthorized", "danger")
+        return redirect("/")
 
+    form = UserEditForm(obj=g.user)
+
+    if form.validate_on_submit():
+        if User.authenticate(g.user.username, form.password.data):
+            g.user.bio = form.bio.data
+            g.user.location = form.location.data
+            # Allow user to revert to defaults by leaving fields empty
+            g.user.image_url = form.image_url.data if form.image_url.data else '/static/images/default-pic.png'
+            g.user.header_image_url = form.header_image_url.data if form.header_image_url.data else '/static/images/warbler-hero.jpg'
+            
+            # Enforce unique constraint on username
+            if form.username.data != g.user.username and User.query.filter_by(username=form.username.data).first():
+                flash("A user already exists with that username.", 'danger')
+                return redirect('/users/profile')
+            g.user.username = form.username.data
+            
+            # Enforce unique constraint on email
+            if form.email.data != g.user.email and User.query.filter_by(email=form.email.data).first():
+                flash("A user already exists with that email.", 'danger')
+                return redirect('/users/profile')
+            g.user.email = form.email.data
+
+
+            db.session.add(g.user)
+            try:
+                db.session.commit()
+                flash('Profile updated.', 'info')
+                return redirect('/')
+            except:
+                db.session.rollback()
+                flash('An error occured. Please try again.', 'danger')
+                return redirect('/users/profile')
+
+        else:
+            flash("Incorrect Password", 'danger')
+            return redirect('/users/profile')
+    
+    return render_template('/users/edit.html', form=form)
 
 @app.route('/users/delete', methods=["POST"])
 def delete_user():
