@@ -32,20 +32,17 @@ class Likes(db.Model):
 
     __tablename__ = 'likes' 
 
-    id = db.Column(
-        db.Integer,
-        primary_key=True
-    )
-
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.id', ondelete='cascade')
+        db.ForeignKey('users.id', ondelete='cascade'),
+        primary_key=True
     )
 
     message_id = db.Column(
         db.Integer,
         db.ForeignKey('messages.id', ondelete='cascade'),
-        unique=True
+        primary_key=True,
+        #unique=True # would make a bug? two users couldn't follow same message, better as composite primary key (user, message)
     )
 
 
