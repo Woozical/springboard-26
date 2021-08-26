@@ -46,6 +46,7 @@
 
     <div class="col-lg-6 col-md-8 col-sm-12">
       <ul class="list-group" id="messages">
+        {% if messages %}
         {% for msg in messages %}
           <li class="list-group-item">
             <a href="/messages/{{ msg.id  }}" class="message-link"/>
@@ -69,6 +70,13 @@
             </form>
           </li>
         {% endfor %}
+        {% else %}
+        <li class="list-group-item">
+          <div class="message-area">
+            <p>There are no messages in your feed. Start following other warblers!</p>
+          </div>
+        </li>
+        {% endif %}
       </ul>
     </div>
 
