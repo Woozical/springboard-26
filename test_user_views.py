@@ -20,12 +20,12 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
 
 # Now we can import app
 
-from app import app, CURR_USER_KEY
+from app import app, CURR_USER_KEY, session
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
 # and create fresh new clean test data
-db.drop_all
+db.drop_all()
 db.create_all()
 
 # Don't have WTForms use CSRF at all, since it's a pain to test
@@ -223,26 +223,29 @@ class UserViewTestCase(TestCase):
             self.assertNotEqual(updated.image_url, data['image_url'])
     
 
-    ### This test is oddly failing. When the route is hit with my test, SQL alchemy isn't doing a delete cascade on messages
-    ## Note the delete cascade works when browsing, and on model tests
-    ## It appears to be an issue with the route using:
-    ## db.session.delete(g.user)
-    ## Instead of doing it as part of a query like:
-    ## User.query.filter_by(id = g.user.id).delete()
-    # def test_user_deletion(self):
-    #     with self.client as client:
-    #         with client.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
+    ## This test is oddly failing. When the route is hit with my test, SQL alchemy isn't doing a delete cascade on messages
+    # Note the delete cascade works when browsing, and on model tests
+    # It appears to be an issue with the route's view function using the following method:
+    # db.session.delete(g.user)
+    # If the view function deletes the record in the following manner, the test passes:
+    # User.query.filter_by(id = g.user.id).delete()
+    def test_user_deletion(self):
+        with app.test_client() as client:
+            # Preps the Flask session cookie before test client makes the request
+            with client.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id # Sets the Flask Session Cookie <SecureCookieSession {'curr_user': self.testuser.id}>
             
-    #         res = client.post('/users/delete')
+            # Client is logged in... ('curr_user' in session cookie)
+            client.get('/')
+            self.assertIn(CURR_USER_KEY, session)
 
-    #         #should logout user
-    #         self.assertIsNone(sess[CURR_USER_KEY])
+            res = client.post('/users/delete')
+            #should logout user, aka Delete 'curr_user' from session cookie
+            self.assertNotIn(CURR_USER_KEY, session)
 
-    #         # should delete user from DB
-    #         self.assertIsNone(User.query.get(self.testuser.id))
+            # should delete user from DB
+            self.assertIsNone(User.query.get(self.testuser.id))
 
-    #         # should redirect
-    #         self.assertEqual(res.status_code, 302)
+            # should redirect
+            self.assertEqual(res.status_code, 302)
 
-    

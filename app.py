@@ -270,9 +270,10 @@ def delete_user():
 
     do_logout()
 
-    db.session.delete(g.user)
+    db.session.delete(g.user)  # - DOES NOT WORK IN TESTS
+    # User.query.filter_by(id=g.user.id).delete() # - WORKS IN TESTS
     db.session.commit()
-
+    print(session)
     return redirect("/signup")
 
 @app.route('/users/add_like/<int:msg_id>', methods=['POST'])
